@@ -52,6 +52,7 @@ New message from your portfolio!
 ━━━━━━━━━━━━━━━━━━━
 Name    : {contact.name}
 Email   : {contact.email}
+Company : {contact.company or "N/A"}
 Subject : {contact.subject or "N/A"}
 ━━━━━━━━━━━━━━━━━━━
 

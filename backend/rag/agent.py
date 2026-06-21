@@ -1,27 +1,25 @@
 """
-RAG Agent
-─────────
-User question → retrieve top-k portfolio chunks from ChromaDB
-             → inject as context → LLM generates grounded answer
+RAG Agent — Google Gemini (REST API)
+─────────────────────────────────────
+User question → inject portfolio data as context → Gemini generates grounded answer.
 
-LLM priority:
-  1. Groq (free — llama-3.1-8b-instant, 14 400 tokens/min)
-  2. Anthropic Claude (haiku — cheapest option)
-  Both are set via env vars; Groq is recommended for free hosting.
+Uses Gemini 2.0 Flash Lite via direct REST API calls.
 """
 
 import os
 import json
 import asyncio
 import logging
-
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
+import httpx
 
 logger = logging.getLogger(__name__)
 
 # Load the JSON data directly
 DATA_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "portfolio_data.json")
+
+GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash-lite")
+
 
 def _load_portfolio_data() -> str:
     if not os.path.exists(DATA_FILE):
@@ -29,6 +27,7 @@ def _load_portfolio_data() -> str:
     with open(DATA_FILE, "r") as f:
         data = json.load(f)
     return json.dumps(data, indent=2)
+
 
 # ── System prompt ─────────────────────────────────────────────────────────────
 SYSTEM_PROMPT = """\
@@ -41,60 +40,95 @@ Rules:
 - Be friendly, concise, and professional (like Mustafiz himself).
 - Never invent facts, links, or numbers not in the context.
 - If asked something personal/off-topic, politely redirect to Mustafiz's work.
+- Use markdown formatting where appropriate (bold, lists, etc).
+- Keep answers concise — 2-4 sentences for simple questions, more for detailed ones.
 
 Here is ALL of the information about Mustafiz Khan:
-{context}
 """
 
-# ── LLM factory ───────────────────────────────────────────────────────────────
-
-def _get_llm():
-    """Pick the best available free/cheap LLM."""
-    groq_key = os.getenv("GROQ_API_KEY")
-    if groq_key:
-        from langchain_groq import ChatGroq
-        logger.info("🤖 Using Groq (llama-3.1-8b-instant) — free tier")
-        return ChatGroq(
-            api_key=groq_key,
-            model_name="llama-3.1-8b-instant",  # Fast and generous free tier
-            temperature=0.3,
-            max_tokens=600,
-        )
-
-    raise RuntimeError(
-        "No LLM API key found!\n"
-        "  → Set GROQ_API_KEY  (free at https://console.groq.com)\n"
-    )
 
 # ── Public API ─────────────────────────────────────────────────────────────────
 
-async def get_rag_response(question: str) -> tuple[str, list[str]]:
+async def get_rag_response(question: str, history: list[dict] | None = None) -> tuple[str, list[str]]:
     """
-    Run the AI response generation asynchronously using direct context injection.
+    Generate an AI response using Google Gemini REST API with portfolio context.
     Returns (answer_text, list_of_source_labels).
     """
-    portfolio_data = _load_portfolio_data()
-    
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", SYSTEM_PROMPT.replace("{context}", portfolio_data)),
-        ("human", "{input}"),
-    ])
-    
-    llm = _get_llm()
-    chain = prompt | llm | StrOutputParser()
-
-    # Run the synchronous chain in an executor thread
-    loop = asyncio.get_event_loop()
-    try:
-        answer = await loop.run_in_executor(
-            None,
-            lambda: chain.invoke({"input": question}),
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        raise RuntimeError(
+            "GOOGLE_API_KEY not set!\n"
+            "  → Get a free key at https://aistudio.google.com/apikey\n"
         )
-    except Exception as e:
-        logger.error(f"Error generating response: {e}")
-        answer = "I'm sorry, I'm having trouble connecting to my brain right now. Please try again later."
 
-    # Since we use the entire portfolio data directly, the source is always the portfolio itself
+    portfolio_data = _load_portfolio_data()
+
+    # Build conversation contents
+    contents = []
+
+    # Add chat history if available (skip the initial greeting from the UI)
+    if history:
+        for msg in history[:-1]:
+            role = "user" if msg.get("role") == "user" else "model"
+            contents.append({
+                "role": role,
+                "parts": [{"text": msg["content"]}]
+            })
+
+    # Add the current question
+    contents.append({
+        "role": "user",
+        "parts": [{"text": question}]
+    })
+
+    # Build request body
+    request_body = {
+        "system_instruction": {
+            "parts": [{"text": SYSTEM_PROMPT + portfolio_data}]
+        },
+        "contents": contents,
+        "generationConfig": {
+            "temperature": 0.3,
+            "maxOutputTokens": 800,
+        }
+    }
+
+    url = f"{GEMINI_BASE_URL}/{GEMINI_MODEL}:generateContent?key={api_key}"
+
+    # Retry with exponential backoff for rate limits
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(url, json=request_body)
+
+            if response.status_code == 429:
+                wait_time = (attempt + 1) * 15  # 15s, 30s, 45s
+                logger.warning(f"Rate limited (429), retrying in {wait_time}s (attempt {attempt + 1}/{max_retries})")
+                await asyncio.sleep(wait_time)
+                continue
+
+            if response.status_code != 200:
+                error_detail = response.text
+                logger.error(f"Gemini API error {response.status_code}: {error_detail}")
+                raise Exception(f"Gemini API returned {response.status_code}")
+
+            result = response.json()
+            answer = result["candidates"][0]["content"]["parts"][0]["text"]
+            logger.info(f"✅ Gemini response generated ({len(answer)} chars)")
+            sources = ["portfolio_data"]
+            return answer, sources
+
+        except Exception as e:
+            if attempt < max_retries - 1 and "429" in str(e):
+                continue
+            logger.error(f"Gemini API error: {e}")
+            break
+
+    answer = (
+        "I'm sorry, I'm having trouble connecting right now. "
+        "Please try again in a moment, or reach out to Mustafiz directly at "
+        "mustafizkhanmohammad39@gmail.com"
+    )
     sources = ["portfolio_data"]
-
     return answer, sources

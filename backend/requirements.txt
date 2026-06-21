@@ -1,23 +1,15 @@
 # ── Web framework ──────────────────────────────────────────────────────────────
-fastapi==0.115.5
-uvicorn[standard]==0.32.1
-python-dotenv==1.0.1
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+python-dotenv>=1.0.0
 
 # ── Database ───────────────────────────────────────────────────────────────────
-sqlalchemy==2.0.36
-aiosqlite==0.20.0
+sqlalchemy>=2.0.36
+aiosqlite>=0.20.0
 
 # ── Validation ─────────────────────────────────────────────────────────────────
-pydantic[email]==2.10.3
-email-validator==2.2.0
+pydantic[email]>=2.11.0
+email-validator>=2.2.0
 
-# ── LangChain RAG stack ────────────────────────────────────────────────────────
-langchain==0.3.9
-langchain-core==0.3.21
-langchain-community==0.3.9
-
-# ── LLM providers (at least one required — Groq is free) ──────────────────────
-langchain-groq==0.2.1          # FREE: 14,400 tokens/min → https://console.groq.com
-langchain-anthropic==0.3.0     # Optional: Claude Haiku fallback
-
-# ── Embeddings & Vector store removed for ultra-lightweight deployment ────────
+# ── HTTP client for Gemini REST API ────────────────────────────────────────────
+httpx>=0.28.0

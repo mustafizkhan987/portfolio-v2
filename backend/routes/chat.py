@@ -27,7 +27,7 @@ async def chat(body: ChatRequest):
 
     try:
         logger.info(f"[{session_id}] Q: {body.message[:80]}")
-        answer, sources = await get_rag_response(body.message)
+        answer, sources = await get_rag_response(body.message, history=body.history)
         logger.info(f"[{session_id}] A: {answer[:80]}...")
 
         return ChatResponse(

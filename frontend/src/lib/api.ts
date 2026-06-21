@@ -6,6 +6,7 @@ export interface ContactPayload {
   name: string;
   email: string;
   subject?: string;
+  company?: string;
   message: string;
 }
 
@@ -23,15 +24,21 @@ export async function submitContact(data: ContactPayload): Promise<ContactResult
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail || 'Failed to send message');
+    throw new Error(err.detail || 'Failed to send message. Please try again.');
   }
   return res.json();
 }
 
 // ── AI Chat Agent ─────────────────────────────────────────────────────────────
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 export interface ChatPayload {
   message: string;
   session_id?: string;
+  history: ChatMessage[];
 }
 
 export interface ChatResult {

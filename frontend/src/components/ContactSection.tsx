@@ -5,28 +5,32 @@ import { motion } from "framer-motion";
 import { Send, CheckCircle2, Mail } from "lucide-react";
 import { submitContact } from "@/lib/api";
 export default function ContactSection() {
-  const [status, setStatus] = useState<"idle" | "submitting" | "success">("idle");
+  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [formData, setFormData] = useState({ name: "", email: "", company: "", message: "" });
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus("submitting");
+    setErrorMsg("");
     
     try {
       await submitContact({
         name: formData.name,
         email: formData.email,
         subject: formData.company ? `Message from ${formData.company}` : "New Contact Form Message",
+        company: formData.company || undefined,
         message: formData.message,
       });
 
       setStatus("success");
       setFormData({ name: "", email: "", company: "", message: "" });
-      setTimeout(() => setStatus("idle"), 3000);
+      setTimeout(() => setStatus("idle"), 4000);
     } catch (error) {
       console.error(error);
-      setStatus("idle");
-      alert(error instanceof Error ? error.message : "Error sending message.");
+      setStatus("error");
+      setErrorMsg(error instanceof Error ? error.message : "Error sending message. Please try again.");
+      setTimeout(() => setStatus("idle"), 5000);
     }
   };
 
@@ -70,10 +74,19 @@ export default function ContactSection() {
                 <CheckCircle2 size={64} className="text-green-500 mb-4" />
               </motion.div>
               <h3 className="text-2xl font-bold mb-2">Message Sent!</h3>
-              <p className="text-[var(--muted-foreground)]">I'll get back to you as soon as possible.</p>
+              <p className="text-[var(--muted-foreground)]">I&apos;ll get back to you as soon as possible.</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+              {status === "error" && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm"
+                >
+                  ⚠️ {errorMsg}
+                </motion.div>
+              )}
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="flex flex-col gap-2">
                   <label htmlFor="name" className="text-sm font-medium">Name</label>
