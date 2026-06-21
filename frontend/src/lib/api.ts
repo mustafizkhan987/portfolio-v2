@@ -24,7 +24,15 @@ export async function submitContact(data: ContactPayload): Promise<ContactResult
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail || 'Failed to send message. Please try again.');
+    let errMsg = 'Failed to send message. Please try again.';
+    if (err.detail) {
+      if (typeof err.detail === 'string') {
+        errMsg = err.detail;
+      } else if (Array.isArray(err.detail)) {
+        errMsg = err.detail.map((e: any) => e.msg || JSON.stringify(e)).join(', ');
+      }
+    }
+    throw new Error(errMsg);
   }
   return res.json();
 }
