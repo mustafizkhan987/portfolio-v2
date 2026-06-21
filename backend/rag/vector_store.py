@@ -5,28 +5,24 @@ Run train.py first to populate it with your portfolio data.
 
 import os
 import logging
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from langchain_chroma import Chroma
 
 logger = logging.getLogger(__name__)
 
 CHROMA_PATH     = os.getenv("CHROMA_PATH",     "./chroma_db")
-EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2")  # ~90 MB, CPU-friendly
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5")  # Ultra-lightweight ONNX model
 
 _embeddings  = None
 _vectorstore = None
 
 
-def get_embeddings() -> HuggingFaceEmbeddings:
-    """Lazy-load the embedding model (downloaded once, cached by HuggingFace)."""
+def get_embeddings() -> FastEmbedEmbeddings:
+    """Lazy-load the embedding model (ultra-lightweight FastEmbed)."""
     global _embeddings
     if _embeddings is None:
-        logger.info(f"📦 Loading embedding model: {EMBEDDING_MODEL}")
-        _embeddings = HuggingFaceEmbeddings(
-            model_name=EMBEDDING_MODEL,
-            model_kwargs={"device": "cpu"},
-            encode_kwargs={"normalize_embeddings": True},
-        )
+        logger.info(f"📦 Loading fast embedding model: {EMBEDDING_MODEL}")
+        _embeddings = FastEmbedEmbeddings(model_name=EMBEDDING_MODEL)
         logger.info("✅ Embedding model loaded")
     return _embeddings
 

@@ -21,10 +21,8 @@ langchain-chroma==0.1.4
 langchain-groq==0.2.1          # FREE: 14,400 tokens/min → https://console.groq.com
 langchain-anthropic==0.3.0     # Optional: Claude Haiku fallback
 
-# ── Embeddings (local, no API cost) ───────────────────────────────────────────
-sentence-transformers==3.3.1
-# torch is a heavy dep — CPU-only build is fine and ~5× smaller:
-# torch removed for automatic resolution
+# ── Embeddings (local, lightweight, ONNX-based) ───────────────────────────────
+fastembed==0.4.2
 
 
 # ── Vector store ───────────────────────────────────────────────────────────────
