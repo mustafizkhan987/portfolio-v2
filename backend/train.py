@@ -25,7 +25,7 @@ import logging
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from langchain_chroma import Chroma
 from dotenv import load_dotenv
 
@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 CHROMA_PATH     = os.getenv("CHROMA_PATH",     "./chroma_db")
 DATA_FILE       = "./data/portfolio_data.json"
-EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2")
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5")
 
 
 # ── Document builders ─────────────────────────────────────────────────────────
@@ -170,11 +170,7 @@ def train() -> None:
 
     # 4. Load embedding model
     logger.info(f"🔢  Loading embedding model: {EMBEDDING_MODEL}")
-    embeddings = HuggingFaceEmbeddings(
-        model_name=EMBEDDING_MODEL,
-        model_kwargs={"device": "cpu"},
-        encode_kwargs={"normalize_embeddings": True},
-    )
+    embeddings = FastEmbedEmbeddings(model_name=EMBEDDING_MODEL)
     logger.info("✅  Embedding model ready")
 
     # 5. Clear old vector store and rebuild
