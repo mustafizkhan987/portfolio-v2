@@ -11,16 +11,24 @@ LLM priority:
 """
 
 import os
+import json
 import asyncio
 import logging
 
 from langchain_core.prompts import ChatPromptTemplate
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain.chains import create_retrieval_chain
-
-from rag.vector_store import get_vectorstore
+from langchain_core.output_parsers import StrOutputParser
 
 logger = logging.getLogger(__name__)
+
+# Load the JSON data directly
+DATA_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "portfolio_data.json")
+
+def _load_portfolio_data() -> str:
+    if not os.path.exists(DATA_FILE):
+        return "Mustafiz Khan's portfolio data is currently unavailable."
+    with open(DATA_FILE, "r") as f:
+        data = json.load(f)
+    return json.dumps(data, indent=2)
 
 # ── System prompt ─────────────────────────────────────────────────────────────
 SYSTEM_PROMPT = """\
@@ -29,21 +37,19 @@ Your job is to answer visitors' questions about Mustafiz — his skills, project
 education, achievements, and how to contact him.
 
 Rules:
-- Answer ONLY from the provided context. If the answer isn't there, say so.
+- Answer ONLY from the provided context below. If the answer isn't there, say so.
 - Be friendly, concise, and professional (like Mustafiz himself).
 - Never invent facts, links, or numbers not in the context.
 - If asked something personal/off-topic, politely redirect to Mustafiz's work.
 
-Context:
+Here is ALL of the information about Mustafiz Khan:
 {context}
 """
-
 
 # ── LLM factory ───────────────────────────────────────────────────────────────
 
 def _get_llm():
     """Pick the best available free/cheap LLM."""
-
     groq_key = os.getenv("GROQ_API_KEY")
     if groq_key:
         from langchain_groq import ChatGroq
@@ -55,71 +61,40 @@ def _get_llm():
             max_tokens=600,
         )
 
-    anthropic_key = os.getenv("ANTHROPIC_API_KEY")
-    if anthropic_key:
-        from langchain_anthropic import ChatAnthropic
-        logger.info("🤖 Using Claude Haiku (Anthropic)")
-        return ChatAnthropic(
-            api_key=anthropic_key,
-            model="claude-haiku-4-5-20251001",
-            temperature=0.3,
-            max_tokens=600,
-        )
-
     raise RuntimeError(
         "No LLM API key found!\n"
         "  → Set GROQ_API_KEY  (free at https://console.groq.com)\n"
-        "  → OR set ANTHROPIC_API_KEY"
     )
-
-
-# ── RAG chain builder ─────────────────────────────────────────────────────────
-
-def _build_chain():
-    """Assemble the full RAG chain (built fresh per request to keep it stateless)."""
-    vectorstore = get_vectorstore()
-
-    retriever = vectorstore.as_retriever(
-        search_type="similarity",
-        search_kwargs={"k": 4},  # top-4 most relevant portfolio chunks
-    )
-
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", SYSTEM_PROMPT),
-        ("human",  "{input}"),
-    ])
-
-    llm               = _get_llm()
-    doc_chain         = create_stuff_documents_chain(llm, prompt)
-    retrieval_chain   = create_retrieval_chain(retriever, doc_chain)
-
-    return retrieval_chain
-
 
 # ── Public API ─────────────────────────────────────────────────────────────────
 
 async def get_rag_response(question: str) -> tuple[str, list[str]]:
     """
-    Run the RAG pipeline asynchronously.
+    Run the AI response generation asynchronously using direct context injection.
     Returns (answer_text, list_of_source_labels).
     """
-    chain  = _build_chain()
+    portfolio_data = _load_portfolio_data()
+    
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", SYSTEM_PROMPT.replace("{context}", portfolio_data)),
+        ("human", "{input}"),
+    ])
+    
+    llm = _get_llm()
+    chain = prompt | llm | StrOutputParser()
 
-    # LangChain chains are synchronous — run in a thread pool so we don't
-    # block the FastAPI event loop.
-    loop   = asyncio.get_event_loop()
-    result = await loop.run_in_executor(
-        None,
-        lambda: chain.invoke({"input": question}),
-    )
+    # Run the synchronous chain in an executor thread
+    loop = asyncio.get_event_loop()
+    try:
+        answer = await loop.run_in_executor(
+            None,
+            lambda: chain.invoke({"input": question}),
+        )
+    except Exception as e:
+        logger.error(f"Error generating response: {e}")
+        answer = "I'm sorry, I'm having trouble connecting to my brain right now. Please try again later."
 
-    answer = result.get("answer", "I couldn't find an answer to that.")
-
-    # Collect unique source labels for transparency
-    source_docs = result.get("context", [])
-    sources = list({
-        doc.metadata.get("source", "portfolio")
-        for doc in source_docs
-    })
+    # Since we use the entire portfolio data directly, the source is always the portfolio itself
+    sources = ["portfolio_data"]
 
     return answer, sources
