@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, X, Send, Bot, User } from "lucide-react";
+import { chatWithAgent } from "@/lib/api";
 
 export default function ChatBot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -10,7 +11,8 @@ export default function ChatBot() {
     { role: "assistant", content: "Hi! I am the AI assistant for Mohammed Mustafiz Khan, a B.Tech CSE (AIML) student at Dayananda Sagar University. Ask me anything about his skills, projects like Sarathi, or his background!" }
   ]);
   const [input, setInput] = useState("");
-
+  const [sessionId, setSessionId] = useState<string | undefined>();
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     const handleOpen = () => setIsOpen(true);
     window.addEventListener('open-chatbot', handleOpen);
@@ -19,41 +21,27 @@ export default function ChatBot() {
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || loading) return;
 
     const userMsg = input.trim();
     setMessages((prev) => [...prev, { role: "user", content: userMsg }]);
     setInput("");
+    setLoading(true);
 
     try {
-      // Backend is currently disconnected.
-      /*
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-      const res = await fetch(`${API_URL}/api/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMsg }),
-      });
-      
-      const data = await res.json();
-      
+      const result = await chatWithAgent({ message: userMsg, session_id: sessionId });
+      setSessionId(result.session_id);
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: data.response || "Sorry, I couldn't process that." }
+        { role: "assistant", content: result.response }
       ]);
-      */
-
-      setTimeout(() => {
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", content: "The backend is currently being rebuilt. I'll be back online soon!" }
-        ]);
-      }, 1000);
     } catch (error) {
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: "Error connecting to the AI server." }
       ]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -112,7 +100,7 @@ export default function ChatBot() {
               />
               <button
                 type="submit"
-                disabled={!input.trim()}
+                disabled={!input.trim() || loading}
                 className="p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
               >
                 <Send size={18} />

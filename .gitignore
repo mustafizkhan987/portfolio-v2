@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+venv/
+.venv/
+env/
+
+# Environment secrets \u2014 NEVER COMMIT THESE
+.env
+.env.local
+.env.production
+.env.*.local
+backend/.env
+
+# Vector store (large binary \u2014 rebuild with train.py)
+backend/chroma_db/
+
+# SQLite database (contains real user messages)
+backend/*.db
+backend/*.sqlite
+
+# Node / Next.js
+node_modules/
+frontend/.next/
+frontend/out/
+frontend/.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+*.log

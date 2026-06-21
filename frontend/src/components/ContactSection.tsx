@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Send, CheckCircle2, Mail } from "lucide-react";
-
+import { submitContact } from "@/lib/api";
 export default function ContactSection() {
   const [status, setStatus] = useState<"idle" | "submitting" | "success">("idle");
   const [formData, setFormData] = useState({ name: "", email: "", company: "", message: "" });
@@ -13,27 +13,20 @@ export default function ContactSection() {
     setStatus("submitting");
     
     try {
-      // Backend is currently disconnected. Simulating a successful response.
-      /*
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-      const res = await fetch(`${API_URL}/api/contact`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+      await submitContact({
+        name: formData.name,
+        email: formData.email,
+        subject: formData.company ? `Message from ${formData.company}` : "New Contact Form Message",
+        message: formData.message,
       });
-      
-      if (!res.ok) throw new Error("Failed to send message");
-      */
 
-      setTimeout(() => {
-        setStatus("success");
-        setFormData({ name: "", email: "", company: "", message: "" });
-        setTimeout(() => setStatus("idle"), 3000);
-      }, 1000);
+      setStatus("success");
+      setFormData({ name: "", email: "", company: "", message: "" });
+      setTimeout(() => setStatus("idle"), 3000);
     } catch (error) {
       console.error(error);
       setStatus("idle");
-      alert("Error sending message.");
+      alert(error instanceof Error ? error.message : "Error sending message.");
     }
   };
 

@@ -1,0 +1,158 @@
+{
+  "about": "I'm Mustafiz Khan, a B.Tech CSE-AIML student from Karnataka, India. I'm passionate about Artificial Intelligence, Machine Learning, and full-stack development. My goal is to build intelligent systems that solve real-world problems. I actively learn through platforms like DeepLearning.AI, Hugging Face, fast.ai, and Karpathy's Neural Networks: Zero to Hero series.",
+  "skills": {
+    "Programming Languages": [
+      "Python",
+      "TypeScript",
+      "JavaScript",
+      "Java",
+      "C++"
+    ],
+    "AI & Machine Learning": [
+      "Machine Learning",
+      "Deep Learning",
+      "NLP",
+      "Computer Vision",
+      "LLMs",
+      "RAG",
+      "Prompt Engineering"
+    ],
+    "ML Frameworks": [
+      "TensorFlow",
+      "PyTorch",
+      "Scikit-learn",
+      "HuggingFace Transformers",
+      "LangChain"
+    ],
+    "Web Development": [
+      "React",
+      "Next.js",
+      "FastAPI",
+      "Node.js",
+      "REST APIs"
+    ],
+    "Databases & Storage": [
+      "SQLite",
+      "PostgreSQL",
+      "MongoDB",
+      "ChromaDB",
+      "Pinecone"
+    ],
+    "Tools & DevOps": [
+      "Git",
+      "GitHub",
+      "Docker",
+      "Linux",
+      "VS Code",
+      "Jupyter Notebook"
+    ]
+  },
+  "projects": [
+    {
+      "name": "Portfolio Website v2",
+      "description": "A modern, responsive personal portfolio website showcasing my journey as a CSE-AIML student. Built with Next.js and TypeScript for performance and type-safety. Features smooth animations, project showcase, skills section, and an AI-powered chat agent.",
+      "tech_stack": [
+        "Next.js",
+        "TypeScript",
+        "React",
+        "CSS",
+        "FastAPI",
+        "Python",
+        "LangChain",
+        "ChromaDB"
+      ],
+      "status": "Live",
+      "github": "https://github.com/mustafizkhan987/portfolio-v2",
+      "demo": "",
+      "highlights": [
+        "Responsive design with modern UI",
+        "AI chat agent powered by RAG",
+        "Contact form with email notifications",
+        "Deployed on Vercel + Render"
+      ]
+    },
+    {
+      "name": "Sarathi – Advanced Women Safety Transportation Platform",
+      "description": "Designed a women-focused smart transportation and cab safety solution inspired by ride-hailing platforms.",
+      "tech_stack": [],
+      "status": "Completed",
+      "github": "",
+      "demo": "",
+      "highlights": [
+        "Integrated safety-oriented concepts including location tracking, emergency response mechanisms, and enhanced passenger security.",
+        "Focused on leveraging modern technology to improve transportation safety and trust."
+      ]
+    },
+    {
+      "name": "Smart Traffic Congestion Predictor",
+      "description": "Developed a Machine Learning-based traffic prediction system.",
+      "tech_stack": [
+        "Machine Learning"
+      ],
+      "status": "Completed",
+      "github": "",
+      "demo": "",
+      "highlights": [
+        "Utilized historical traffic data and predictive analytics techniques.",
+        "Aimed to forecast congestion levels and assist in efficient route planning."
+      ]
+    },
+    {
+      "name": "Payflow \u2013 Personal Finance Management Application",
+      "description": "Building a finance management application for tracking expenses, income, and savings.",
+      "tech_stack": [],
+      "status": "In Progress",
+      "github": "",
+      "demo": "",
+      "highlights": [
+        "Designed budgeting and financial monitoring features.",
+        "Focused on improving personal financial awareness and management."
+      ]
+    }
+  ],
+  "education": [
+    {
+      "degree": "B.Tech",
+      "field": "Computer Science and Engineering \u2014 Artificial Intelligence & Machine Learning (CSE-AIML)",
+      "institution": "Dayananda Sagar University",
+      "duration": "2024 \u2013 2028",
+      "grade": "6.2 / 10",
+      "courses": [
+        "Machine Learning",
+        "Deep Learning",
+        "Natural Language Processing",
+        "Data Structures and Algorithms",
+        "Database Management Systems",
+        "Computer Networks",
+        "Operating Systems",
+        "Object-Oriented Programming"
+      ]
+    }
+  ],
+  "experience": [],
+  "achievements": [
+    "Researched and publicly exposed ClinchEdge (clinchedge.com) as a pay-to-intern scam, helping fellow Indian students avoid fraud",
+    "Actively building a self-study path from Python basics to LLMs, APIs, and advanced machine learning",
+    "Studying on platforms including DeepLearning.AI, Hugging Face, fast.ai, and Anthropic Academy",
+    "Built a full-stack portfolio with an AI-powered RAG chat agent from scratch",
+    "Linux for Beginners \u2014 Infosys Springboard \u2014 Completed",
+    "JavaScript Programming \u2014 Course Completed",
+    "MongoDB Fundamentals \u2014 Course Completed"
+  ],
+  "contact": {
+    "email": "mustafizkhanmohammad39@gmail.com",
+    "github": "https://github.com/mustafizkhan987",
+    "linkedin": "https://linkedin.com/in/mohammed-mustafiz-khan-84bb6b350",
+    "twitter": "none",
+    "location": "Karnataka, India",
+    "availability": "Open to internships, collaborations, and freelance AI/ML projects"
+  },
+  "interests": [
+    "Large Language Models and Agentic AI",
+    "RAG (Retrieval-Augmented Generation) systems",
+    "Open-source ML tools and communities",
+    "Full-stack web development with AI features",
+    "Learning by building real projects"
+  ],
+  "_instructions": "FILL IN the placeholders above (YOUR COLLEGE NAME, YOUR EMAIL, etc.) then run: python train.py"
+}
