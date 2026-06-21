@@ -10,8 +10,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the backend files
 COPY . .
 
-# Run the training script to build the vector store database
-RUN python train.py
+
 
 # Create a non-root user (Hugging Face Spaces requires this for security)
 RUN useradd -m -u 1000 user

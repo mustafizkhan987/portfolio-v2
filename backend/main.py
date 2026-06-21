@@ -31,9 +31,7 @@ async def lifespan(app: FastAPI):
     await init_db()
     logger.info("✅ Database ready")
 
-    # 2. Load vector store (built by train.py)
-    from rag.vector_store import init_vector_store
-    init_vector_store()
+    # Vector store initialization removed (using direct prompt injection instead)
 
     logger.info("🎉 API is live!\n")
     yield
